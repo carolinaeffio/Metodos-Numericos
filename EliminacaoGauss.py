@@ -1,39 +1,31 @@
-def decomposicao_LU(A):
+import numpy as np
+
+def gauss_eliminacao(A, b):
     """
-    Decomposição LU de uma matriz A (n x n) usando o método de Doolittle (sem pivotamento).
-
-    Entrada:
-        A -- matriz quadrada (lista de listas)
-    Saída:
-        L, U -- matrizes triangulares, tal que A = LU
+    Eliminação Gaussiana sem pivoteamento
+    A: matriz de coeficientes (numpy array)
+    b: vetor de termos independentes (numpy array)
+    Retorna: vetor x solução do sistema Ax = b
     """
-    n = len(A)
+    A = A.astype(float)  # Garantir operações em ponto flutuante
+    b = b.astype(float)
+    n = len(b)
 
-    # Inicializa L como matriz identidade
-    L = [[0.0 for _ in range(n)] for _ in range(n)]
-    #gera uma matriz nxn cheia de zeros
-    for i in range(n):
-        L[i][i] = 1.0
+    # Fase de eliminação
+    for k in range(n-1):
+        for i in range(k+1, n):
+            m = A[i, k] / A[k, k]
+            for j in range(k, n):
+                A[i, j] = A[i, j] - m * A[k, j]
+            b[i] = b[i] - m * b[k]
 
-    # Inicializa U como matriz nula
-    U = [[0.0 for _ in range(n)] for _ in range(n)]
+    # Substituição regressiva
+    x = np.zeros(n)
+    x[n-1] = b[n-1] / A[n-1, n-1]
+    for i in range(n-2, -1, -1):
+        soma = 0
+        for j in range(i+1, n):
+            soma += A[i, j] * x[j]
+        x[i] = (b[i] - soma) / A[i, i]
 
-    # Loop principal
-    for k in range(n):
-        # Calcula a linha k de U
-        for j in range(k, n):
-            soma = 0.0
-            for s in range(k):
-                soma += L[k][s] * U[s][j]
-            U[k][j] = A[k][j] - soma
-
-        # Calcula a coluna k de L
-        for i in range(k + 1, n):
-            soma = 0.0
-            for s in range(k):
-                soma += L[i][s] * U[s][k]
-            if U[k][k] == 0:
-                raise ZeroDivisionError("Pivô zero encontrado — use pivotamento.")
-            L[i][k] = (A[i][k] - soma) / U[k][k]
-
-    return L, U
+    return x
